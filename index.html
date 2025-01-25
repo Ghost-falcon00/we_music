@@ -126,11 +126,12 @@
             <span id="duration">0:00</span>
         </div>
         <div class="controls">
-            <button class="control-button" id="prev-button">
+            <button class="control-button" id="prev-button" style="transform: rotate(180deg); transition: transform 0.3s ease;">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M11 18V6l-8.5 6zm1-12v12l8.5-6z"></path>
+                    <path d="M6.5 6v12l8.5-6zm9.5 0v12h2V6z"></path>
                 </svg>
             </button>
+                       
             <button class="control-button play-button" id="play-button">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z"></path>
@@ -200,6 +201,27 @@
             `;
         }
 
+        function updateProgressBar() {
+            const { duration, currentTime } = audio;
+            const progressPercent = (currentTime / duration) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            const currentMinutes = Math.floor(currentTime / 60);
+            const currentSeconds = Math.floor(currentTime % 60);
+            const durationMinutes = Math.floor(duration / 60);
+            const durationSeconds = Math.floor(duration % 60);
+
+            currentTimeElement.textContent = `${currentMinutes}:${currentSeconds.toString().padStart(2, '0')}`;
+            durationElement.textContent = `${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}`;
+        }
+
+        function setProgress(e) {
+            const width = progressContainer.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audio.duration;
+            audio.currentTime = (clickX / width) * duration;
+        }
+
         playButton.addEventListener("click", () => {
             isPlaying ? pauseSong() : playSong();
         });
@@ -215,6 +237,9 @@
             loadSong(currentSongIndex);
             playSong();
         });
+
+        audio.addEventListener("timeupdate", updateProgressBar);
+        progressContainer.addEventListener("click", setProgress);
 
         fetchSongs();
     </script>
