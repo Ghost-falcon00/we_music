@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Music Player</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: no-repeat center center/cover;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('./covers/default.jpg') no-repeat center center/cover;
+            filter: blur(20px);
+            z-index: -1;
+        }
+
+        .player-container {
+            width: 90%;
+            max-width: 400px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .cover {
+            width: 100%;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .song-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin: 15px 0;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: #ff9800;
+            transition: width 0.3s ease;
+        }
+
+        .time {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            color: #fff;
+            margin-top: 10px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .control-button {
+            background: #ff9800;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .control-button svg {
+            fill: white;
+            width: 25px;
+            height: 25px;
+        }
+
+        .play-button {
+            width: 60px;
+            height: 60px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="player-container">
+        <img src="./covers/default.jpg" alt="Song Cover" class="cover" id="cover">
+        <div class="song-title" id="song-title">Loading...</div>
+        <div class="progress-container" id="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="time">
+            <span id="current-time">0:00</span>
+            <span id="duration">0:00</span>
+        </div>
+        <div class="controls">
+            <button class="control-button" id="prev-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M11 18V6l-8.5 6zm1-12v12l8.5-6z"></path>
+                </svg>
+            </button>
+            <button class="control-button play-button" id="play-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"></path>
+                </svg>
+            </button>
+            <button class="control-button" id="next-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M6.5 6v12l8.5-6zm9.5 0v12h2V6z"></path>
+                </svg>
+            </button>
+        </div>
+        <audio id="audio"></audio>
+    </div>
+
+    <script>
+        let songs = [];
+        let currentSongIndex = 0;
+
+        const audio = document.getElementById("audio");
+        const playButton = document.getElementById("play-button");
+        const prevButton = document.getElementById("prev-button");
+        const nextButton = document.getElementById("next-button");
+        const progressBar = document.getElementById("progress-bar");
+        const progressContainer = document.getElementById("progress-container");
+        const currentTimeElement = document.getElementById("current-time");
+        const durationElement = document.getElementById("duration");
+        const cover = document.getElementById("cover");
+        const songTitle = document.getElementById("song-title");
+
+        let isPlaying = false;
+
+        async function fetchSongs() {
+            try {
+                const response = await fetch("./songs.json");
+                songs = await response.json();
+                loadSong(currentSongIndex);
+            } catch (error) {
+                console.error("Error fetching songs:", error);
+            }
+        }
+
+        function loadSong(index) {
+            const song = songs[index];
+            audio.src = `./songs/${song.file}`;
+            cover.src = `./covers/${song.cover}`;
+            songTitle.textContent = song.title;
+            document.body.style.backgroundImage = `url('./covers/${song.cover}')`;
+        }
+
+        function playSong() {
+            audio.play();
+            isPlaying = true;
+            playButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M6 19h4V5H6zm8-14v14h4V5z"></path>
+                </svg>
+            `;
+        }
+
+        function pauseSong() {
+            audio.pause();
+            isPlaying = false;
+            playButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"></path>
+                </svg>
+            `;
+        }
+
+        playButton.addEventListener("click", () => {
+            isPlaying ? pauseSong() : playSong();
+        });
+
+        prevButton.addEventListener("click", () => {
+            currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+            loadSong(currentSongIndex);
+            playSong();
+        });
+
+        nextButton.addEventListener("click", () => {
+            currentSongIndex = (currentSongIndex + 1) % songs.length;
+            loadSong(currentSongIndex);
+            playSong();
+        });
+
+        fetchSongs();
+    </script>
+</body>
+
+</html>
